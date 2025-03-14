@@ -5,7 +5,10 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from app.models import UserProfile
 from app.forms import LoginForm
+from app.forms import UploadForm
 from werkzeug.security import check_password_hash
+from flask import send_from_directory
+from werkzeug.exceptions import BadRequest
 
 
 ###
@@ -21,21 +24,46 @@ def home():
 @app.route('/about/')
 def about():
     """Render the website's about page."""
-    return render_template('about.html', name="Mary Jane")
+    return render_template('about.html', name="Abegail McCalla")
 
 
 @app.route('/upload', methods=['POST', 'GET'])
+@login_required
 def upload():
     # Instantiate your form class
-    form = LoginForm()
+    #form = LoginForm()
+    form = UploadForm()
     # Validate file upload on submit
     if form.validate_on_submit():
         # Get file data and save to your uploads folder
+        file = form.photo.data
+
+         # Save the file securely to the uploads folder
+        filename = secure_filename(file.filename)
+
+        #app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
         flash('File Saved', 'success')
-        return redirect(url_for('home')) # Update this to redirect the user to a route that displays all uploaded image files
+        return redirect(url_for('view_uploads')) # Update this to redirect the user to a route that displays all uploaded image files        
+    return render_template('upload.html', form = form)
 
-    return render_template('upload.html')
+@app.route('/uploads')
+def view_uploads():
+    """Display all uploaded images."""
+    uploads_folder = app.config['UPLOAD_FOLDER']
+    try:
+        image_files = os.listdir(uploads_folder)  # List all files in the uploads directory
+        image_files = [f for f in image_files if f.endswith(('jpg', 'png'))]  # Filter image files
+        return render_template('uploads.html', images=image_files)
+    except FileNotFoundError:
+        flash('Uploads folder not found!', 'danger')
+        return redirect(url_for('home'))
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    """Serve uploaded files dynamically."""
+    return send_from_directory(os.path.join(os.getcwd(), 'uploads'), filename)
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -54,19 +82,24 @@ def login():
         # You will need to import the appropriate function to do so.
         # Then store the result of that query to a `user` variable so it can be
         # passed to the login_user() method below.
-        user = db.session.execute(db.select(UserProfile).filter_by(username=username)).scalar()
-        ses_username = user.username
-        ses_password = user.password
+        if db.session.execute(db.select(UserProfile).filter_by(username=username)).scalar():
+            user = db.session.execute(db.select(UserProfile).filter_by(username=username)).scalar()
+            ses_username = user.username
+            ses_password = user.password
+        else:
+            flash('Username or Password is incorrect.', 'danger') 
+            return redirect(url_for('login'))
+        
         # Gets user id, load into session
         if user and check_password_hash(ses_password, password):
             flash('Logged in successfully.', 'success')
             login_user(user)
-
             # Remember to flash a message to the user
             return redirect(url_for("upload"))  # The user should be redirected to the upload form instead
         else:
             flash('Username or Password is incorrect.', 'danger') 
             return redirect(url_for('login'))
+        
     return render_template("login.html", form=form)
 
 # user_loader callback. This callback is used to reload the user object from
