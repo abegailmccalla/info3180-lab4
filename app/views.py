@@ -26,6 +26,24 @@ def about():
     """Render the website's about page."""
     return render_template('about.html', name="Abegail McCalla")
 
+def get_uploaded_images():
+     rootdir = os.getcwd()    
+     file_list = []
+ 
+     for subdir, dirs, files in os.walk(rootdir + r'\uploads'):
+         for file in files:
+             file_list.append(file)
+     return file_list
+
+@app.route('/uploads/<filename>')
+def get_image(filename):
+    return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
+
+@app.route('/files')
+@login_required
+def files():
+    images = get_uploaded_images()
+    return render_template('files.html', images=images)
 
 @app.route('/upload', methods=['POST', 'GET'])
 @login_required
@@ -45,25 +63,27 @@ def upload():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
         flash('File Saved', 'success')
-        return redirect(url_for('view_uploads')) # Update this to redirect the user to a route that displays all uploaded image files        
+        return redirect(url_for('files')) # Update this to redirect the user to a route that displays all uploaded image files        
     return render_template('upload.html', form = form)
 
-@app.route('/uploads')
-def view_uploads():
-    """Display all uploaded images."""
-    uploads_folder = app.config['UPLOAD_FOLDER']
-    try:
-        image_files = os.listdir(uploads_folder)  # List all files in the uploads directory
-        image_files = [f for f in image_files if f.endswith(('jpg', 'png'))]  # Filter image files
-        return render_template('uploads.html', images=image_files)
-    except FileNotFoundError:
-        flash('Uploads folder not found!', 'danger')
-        return redirect(url_for('home'))
+############# USING UPLOADS HTML (uploads.html) #######################
+# @app.route('/view_uploads')
+# def view_uploads():
+#     """Display all uploaded images."""
+#     uploads_folder = app.config['UPLOAD_FOLDER']
+#     try:
+#         image_files = os.listdir(uploads_folder)  # List all files in the uploads directory
+#         image_files = [f for f in image_files if f.endswith(('jpg', 'png'))]  # Filter image files
+#         return render_template('uploads.html', images=image_files)
+#     except FileNotFoundError:
+#         flash('Uploads folder not found!', 'danger')
+#         return redirect(url_for('home'))
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    """Serve uploaded files dynamically."""
-    return send_from_directory(os.path.join(os.getcwd(), 'uploads'), filename)
+# @app.route('/uploaded_file/<filename>')
+# def uploaded_file(filename):
+#     """Serve uploaded files dynamically."""
+#     return send_from_directory(os.path.join(os.getcwd(), 'uploads'), filename)
+###########################################################################################
 
 
 @app.route('/login', methods=['POST', 'GET'])
