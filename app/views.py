@@ -122,6 +122,13 @@ def login():
         
     return render_template("login.html", form=form)
 
+
+@app.route('/logout')
+def logout():
+    logout_user()  # Log out the current user
+    flash('You have been logged out.', 'info')  # Display a flash message
+    return redirect(url_for('home'))  # Redirect to the home page
+
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
 @login_manager.user_loader
