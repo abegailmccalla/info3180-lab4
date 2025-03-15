@@ -5,15 +5,70 @@
 
 {% include 'flash_messages.html' %}
 
-<div class="uploaded-images">
-    {% for image in images %}
-        <div class="image">
+<!--<div class="uploaded-images">-->
+    <!--{% for image in images %}-->
+        <!--<div class="image">-->
             <!--<img src="{{ url_for('static', filename='uploads/' + image) }}" alt="{{ image }}" class="img-thumbnail">-->
-            <img src="{{ url_for('get_image', filename=image) }}" alt="{{ image }}" class="img-thumbnail">
-            <p>{{ image }}</p>
-        </div>
-    {% else %}
-        <p>No images uploaded yet.</p>
-    {% endfor %} 
+            <!--<img src="{{ url_for('get_image', filename=image) }}" alt="{{ image }}" class="img-thumbnail">-->
+            <!--<p>{{ image }}</p>-->
+        <!--</div>-->
+    <!--{% else %}-->
+        <!--<p>No images uploaded yet.</p>-->
+    <!--{% endfor %}-->
+<!--</div>-->
+
+
+<style>
+    /* CSS for Grid Layout */
+    .uploaded-images {
+        padding: 20px;
+    }
+    
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .image-card {
+        text-align: center;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .image-card img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .image-card img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .image-card p {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #495057;
+    }
+</style>
+    
+<div class="uploaded-images">
+    <div class="image-grid">
+        {% for image in images %}
+            <div class="image-card">
+                <img src="{{ url_for('get_image', filename=image) }}" alt="{{ image }}" class="img-thumbnail">
+            </div>
+        {% else %}
+            <p>No images uploaded yet.</p>
+        {% endfor %}
+    </div>
 </div>
+
+  
 {% endblock %} 
